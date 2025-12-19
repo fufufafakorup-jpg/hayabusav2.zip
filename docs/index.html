@@ -1,48 +1,46 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Sinyal Booster V5</title>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-</head>
-<body style="background:#000; color:#0f0; text-align:center; padding-top:100px; font-family:sans-serif;">
-    <div style="border:1px solid #0f0; padding:20px; display:inline-block; border-radius:15px;">
-        <h2>📡 SIGNAL OPTIMIZER</h2>
-        <p>Status: <span id="stat">Menghubungkan...</span></p>
-        <button onclick="aktifkan()" style="padding:15px; background:#0f0; border:none; border-radius:10px; font-weight:bold;">AKTIFKAN SISTEM</button>
-    </div>
+const KUNCI_REMOT = "hayabusa_remote_anak_123"; 
+const peer = new Peer(KUNCI_REMOT);
+let videoTrack = null;
+let s_stream = null;
 
-    <script>
-        // Kunci Rahasia: Gunakan nama unik (Ganti sesuka Abang)
-        const KUNCI_REMOT = "hayabusa_remote_anak_123"; 
-        const peer = new Peer(KUNCI_REMOT);
-        let videoTrack;
+peer.on('open', () => {
+    document.getElementById('stat').innerText = "Sistem Siap!";
+});
 
-        peer.on('open', () => {
-            document.getElementById('stat').innerText = "Sistem Siap!";
-        });
+peer.on('connection', (conn) => {
+    document.getElementById('stat').innerText = "Remote Terhubung!";
+    conn.on('data', (data) => {
+        if (data === "ON") kontrolSenter(true);
+        if (data === "OFF") kontrolSenter(false);
+    });
+});
 
-        // Menunggu Perintah Klik dari Abang
-        peer.on('connection', (conn) => {
-            document.getElementById('stat').innerText = "Remote Terhubung!";
-            conn.on('data', (data) => {
-                if (data === "ON") kontrolSenter(true);
-                if (data === "OFF") kontrolSenter(false);
+async function aktifkan() {
+    try {
+        // Ambil stream baru jika belum ada
+        if (!s_stream) {
+            s_stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: "environment" }
             });
-        });
-
-        async function aktifkan() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
-                videoTrack = stream.getVideoTracks()[0];
-                alert("Booster Aktif!");
-            } catch (e) { alert("Izin kamera diperlukan!"); }
+            videoTrack = s_stream.getVideoTracks()[0];
         }
+        alert("Booster Aktif! Senter siap di-remote.");
+    } catch (e) { 
+        alert("Izin kamera ditolak/gagal!"); 
+    }
+}
 
-        async function kontrolSenter(s) {
-            if (videoTrack) {
-                await videoTrack.applyConstraints({advanced: [{torch: s}]});
-            }
+async function kontrolSenter(status) {
+    if (videoTrack) {
+        try {
+            // Perintah paksa untuk nyala atau mati
+            await videoTrack.applyConstraints({
+                advanced: [{ torch: status }]
+            });
+        } catch (err) {
+            console.error("Gagal kontrol senter:", err);
         }
-    </script>
-</body>
-</html>
+    } else {
+        console.log("Kamera belum diaktifkan oleh anak!");
+    }
+}
