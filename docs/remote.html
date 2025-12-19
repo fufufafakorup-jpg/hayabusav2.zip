@@ -1,76 +1,111 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <title>HAYABUSA COMMAND CENTER PRO</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        body { background: #0d1117; color: #58a6ff; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; }
-        .card { border: 1px solid #30363d; border-radius: 12px; margin-bottom: 20px; padding: 15px; background: #161b22; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        h3 { font-size: 11px; text-transform: uppercase; color: #8b949e; margin-bottom: 15px; letter-spacing: 1.5px; border-bottom: 1px solid #30363d; padding-bottom: 5px; }
-        button { 
-            padding: 15px; border: 1px solid #30363d; border-radius: 8px; background: #21262d; 
-            color: #c9d1d9; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.3s;
-        }
-        button:hover { background: #30363d; border-color: #58a6ff; }
-        button:active { background: #238636; color: #fff; transform: scale(0.95); }
-        .status { color: #238636; font-size: 12px; margin-bottom: 20px; border: 1px solid #238636; display: inline-block; padding: 5px 15px; border-radius: 20px; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HAYABUSA SAFE REMOTE</title>
+
+<style>
+body {
+  background: #0d1117;
+  color: #58a6ff;
+  font-family: 'Segoe UI', sans-serif;
+  text-align: center;
+  padding: 20px;
+}
+.card {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+button {
+  padding: 15px;
+  width: 100%;
+  margin-top: 12px;
+  font-size: 15px;
+  font-weight: bold;
+  border-radius: 10px;
+  border: 1px solid #30363d;
+  background: #21262d;
+  color: #c9d1d9;
+}
+button:active {
+  background: #238636;
+  color: white;
+}
+.status {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #7ee787;
+}
+</style>
 </head>
+
 <body>
 
-    <div class="status">SISTEM TERKONEKSI KE BOT TELEGRAM</div>
-    <h2>🛰️ HAYABUSA PRO REMOTE</h2>
+<h2>🛡️ HAYABUSA SAFE REMOTE</h2>
+<p>Fitur legal • Izin user • Tanpa hacking</p>
 
-    <div class="card" style="border-color: #58a6ff;">
-        <h3>📍 Monitoring (Link & Termux)</h3>
-        <div class="grid">
-            <button style="grid-column: span 2; background: #238636; color: white;" onclick="window.open('https://t.me/jasher_bot')">📱 BUKA LOG TELEGRAM</button>
-            <button onclick="sendCmd('location')">🔍 Update GPS</button>
-            <button onclick="sendCmd('camera')">📸 Ambil Foto</button>
-        </div>
-    </div>
+<div class="card">
+  <h3>🔋 Cek Baterai</h3>
+  <button onclick="cekBaterai()">CEK STATUS BATERAI</button>
+  <div id="battery" class="status">–</div>
+</div>
 
-    <div class="card">
-        <h3>🔓 Buka Aplikasi (Butuh Termux)</h3>
-        <div class="grid">
-            <button onclick="sendCmd('open_wa')">💬 WhatsApp</button>
-            <button onclick="sendCmd('open_fb')">👥 Facebook</button>
-            <button onclick="sendCmd('open_yt')">🎥 YouTube</button>
-            <button onclick="sendCmd('open_ig')">📸 Instagram</button>
-        </div>
-    </div>
+<div class="card">
+  <h3>🔦 Senter (Torch)</h3>
+  <button onclick="toggleTorch()">NYALAKAN / MATIKAN SENTER</button>
+  <div class="status">Perlu izin kamera</div>
+</div>
 
-    <div class="card">
-        <h3>⚙️ Fitur System (Butuh Termux)</h3>
-        <div class="grid">
-            <button onclick="sendCmd('vibrate')">📳 Getar HP</button>
-            <button onclick="sendCmd('battery')">🔋 Cek Baterai</button>
-            <button onclick="sendCmd('sms_list')">💳 Baca SMS</button>
-            <button onclick="sendCmd('torch_on')">🔦 Senter ON</button>
-        </div>
-    </div>
+<script>
+/* ===== CEK BATERAI ===== */
+function cekBaterai() {
+  if (!navigator.getBattery) {
+    document.getElementById("battery").innerText = "Browser tidak support Battery API";
+    return;
+  }
 
-    <script>
-        const BOT_TOKEN = "8373626378:AAHmCRe_FCCDug1yrlsnat6WFhi71Qf6lQI";
-        const CHAT_ID = "7596509818";
+  navigator.getBattery().then(battery => {
+    const persen = Math.round(battery.level * 100);
+    const status = battery.charging ? "🔌 Sedang di-charge" : "🔋 Tidak di-charge";
+    document.getElementById("battery").innerText =
+      `Baterai: ${persen}% • ${status}`;
+  });
+}
 
-        function sendCmd(cmd) {
-            console.log("Mengirim: " + cmd);
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: CHAT_ID,
-                    text: `!exec ${cmd}`
-                })
-            }).then(() => {
-                alert("Perintah " + cmd.toUpperCase() + " Terkirim ke Telegram!");
-            }).catch(err => {
-                alert("Gagal koneksi ke Telegram.");
-            });
-        }
-    </script>
+/* ===== SENTER ===== */
+let stream;
+let torchOn = false;
+
+async function toggleTorch() {
+  try {
+    if (!stream) {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" }
+      });
+    }
+
+    const track = stream.getVideoTracks()[0];
+    const cap = track.getCapabilities();
+
+    if (!cap.torch) {
+      alert("HP tidak support senter via browser");
+      return;
+    }
+
+    torchOn = !torchOn;
+    await track.applyConstraints({
+      advanced: [{ torch: torchOn }]
+    });
+
+  } catch (e) {
+    alert("Izin kamera ditolak");
+  }
+}
+</script>
+
 </body>
 </html>
